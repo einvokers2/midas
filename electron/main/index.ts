@@ -3,6 +3,7 @@ import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import os from 'node:os'
+import db from './database'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -46,6 +47,8 @@ async function createWindow() {
   win = new BrowserWindow({
     title: 'Main window',
     icon: path.join(process.env.VITE_PUBLIC, 'favicon.ico'),
+    width: 1280,
+    height: 720,
     webPreferences: {
       preload,
       // Warning: Enable nodeIntegration and disable contextIsolation is not secure in production
@@ -76,6 +79,7 @@ async function createWindow() {
     return { action: 'deny' }
   })
   // win.webContents.on('will-navigate', (event, url) => { }) #344
+
 }
 
 app.whenReady().then(createWindow)
@@ -117,4 +121,36 @@ ipcMain.handle('open-win', (_, arg) => {
   } else {
     childWindow.loadFile(indexHtml, { hash: arg })
   }
+})
+
+ipcMain.handle('get-table', async (_, sql) => {
+  try {
+    // 使用 promise 化的 db.all 方法，或者手动将回调转换为 promise
+    const result = await new Promise((resolve, reject) => {
+      db.all(sql, [], (err, rows) => {
+        if (err) {
+          reject(err); // 当有错误时，reject 错误对象
+        } else {
+          resolve(rows); // 成功时，resolve 结果
+        }
+      });
+    });
+    return result;
+  } catch (error) {
+    console.error(error.message);
+    throw error; // 或者你可以返回一个错误响应给前端
+  }
+})
+
+ipcMain.handle('run-table', async (_, sql, params) => {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, (err: { message: any }, rows: unknown) => {
+      if (err) {
+        console.error(err.message);
+        reject(err);
+      }
+      resolve(rows);
+      // insert 返回lastid，update和delete返回影响行数
+    });
+  });
 })

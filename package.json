@@ -1,17 +1,14 @@
 {
-  "name": "electron-vue-vite",
-  "version": "28.1.0",
+  "name": "ghostwalk",
+  "version": "1.0.0",
   "main": "dist-electron/main/index.js",
-  "description": "Really simple Electron + Vue + Vite boilerplate.",
-  "author": "草鞋没号 <308487730@qq.com>",
+  "description": "manage your thing like Karl pressing qqwerv that easy",
+  "author": "Skadi <462924118@qq.com>",
   "license": "MIT",
   "private": true,
   "keywords": [
-    "electron",
-    "rollup",
-    "vite",
-    "vue3",
-    "vue"
+    "Electron",
+    "management"
   ],
   "debug": {
     "env": {
@@ -26,7 +23,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.4",
-    "electron": "^29.1.1",
+    "electron": "^31.1.0",
     "electron-builder": "^24.13.3",
     "typescript": "^5.4.2",
     "vite": "^5.1.5",
@@ -34,5 +31,14 @@
     "vite-plugin-electron-renderer": "^0.14.5",
     "vue": "^3.4.21",
     "vue-tsc": "^2.0.6"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "axios": "^1.7.3",
+    "element-plus": "^2.7.6",
+    "pinia": "^2.2.0",
+    "sqlite3": "^5.1.7",
+    "vue": "^3.4.31",
+    "vue-router": "^4.4.2"
   }
 }
