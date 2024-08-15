@@ -19,10 +19,12 @@ import Sidebar from './components/Layout/Sidebar.vue';
 .layout {
   height: 100%;
   width: 100%;
+
 }
 .container {
   height: 100%;
   width: 100%;
+  background-color: #F6F6F9;
 }
 .sidebar {
   height: 100%;

@@ -1,67 +1,78 @@
 <template>
-    <div class="add-project-button">
-        <el-button type="primary" :icon="Plus" @click="modalVisible = true">新建项目</el-button>
-    </div>
-    <div class="card-container" v-if="projectStore.project.length > 0">
-        <el-card v-for="project in projectStore.project" class="card-item">
-            <template #header>
-                <div class="card-header">
-                    <div class="card-header-left">
-                        <div class="card-title">
-                            <span>{{ project.name }}</span>
-                        </div>
-                        <div>
-                            <span style="font-size: 12px; color: #909399;">{{ project.createdAt }}</span>
-                        </div>
-                    </div>
-                    <div class="card-header-right">
-                        <el-tag type="primary" v-if="project.status == '进行中'">{{ project.status }}</el-tag>
-                        <el-tag type="success" v-if="project.status == '已结束'">{{ project.status }}</el-tag>
-                        <el-tag type="info" v-if="project.status == '未开始'">{{ project.status }}</el-tag>
-                        <el-tag type="warning" v-if="project.status == '暂停'">{{ project.status }}</el-tag>
-                        <el-tag type="danger" v-if="project.status == '失败'">{{ project.status }}</el-tag>
-                        <el-button type="primary" :icon="Edit" circle size="small" @click="router.push({name: 'projectDetail',params: {id: project.projectId}})"/>
-                        <el-button type="danger" :icon="Delete" circle size="small" @click="onProjectDelete(project)"/>
-                    </div>
-                </div>
-            </template>
-            <div class="card-content">{{ project.description }}</div>
-        </el-card>
-    </div>
-    <!-- <div class="pagination">
-        <el-pagination size="small" layout="prev, pager, next" :total="50" />
-    </div> -->
-    <div class="createModal">
-        <el-dialog v-model="modalVisible" title="新建项目" width="500">
-            <el-form :model="form" label-position="right" label-width="auto" class="create-form">
-                <el-form-item label="项目名称" required>
-                    <el-input v-model="form.name" autocomplete="off" placeholder="请输入项目名称" />
-                </el-form-item>
-                <el-form-item label="项目描述">
-                    <el-input v-model="form.description" type="textarea" placeholder="请输入项目描述" 
-                    :autosize="{ minRows: 3, maxRows: 10 }"></el-input>
-                </el-form-item>
-                <el-form-item label="优先级">
-                    <el-select v-model="form.priority" placeholder="请选择优先级">
-                        <el-option v-for="prior in priorities" :key="prior" :label="prior" :value="prior"></el-option>
-                    </el-select>
-                </el-form-item>
-                <el-form-item label="开始日期">
-                    <el-date-picker v-model="form.startDate" type="date" placeholder="请选择开始日期"
-                    value-format="YYYY-MM-DD" format="YYYY-MM-DD"></el-date-picker>
-                </el-form-item>
-                <el-form-item label="结束日期">
-                    <el-date-picker v-model="form.endDate" type="date" placeholder="请选择结束日期"
-                    value-format="YYYY-MM-DD" format="YYYY-MM-DD"></el-date-picker>
-                </el-form-item>
-
-            </el-form>
-            <div class="create-form-button">
-                <el-button @click="modalVisible=false">取消</el-button>
-                <el-button type="primary" @click="onProjectCreate(form)">创建</el-button>
+    <div class="project-container">
+        <div class="project-header">
+            <div class="project-header-title">
+                <span style="font-size: 28px;line-height: 40px;color: #32324D; font-weight: 300;">项目管理</span>
+                <span style="font-size: 14px;line-height: 24px;color: #666687;">{{ projectStore.project.length || 0 }}个项目</span>
             </div>
-        </el-dialog>
+            <div class="add-project-button">
+                <el-button type="primary" :icon="Plus" @click="modalVisible = true">新建项目</el-button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <el-table :data="projectStore.project" style="width: 100%">
+                <el-table-column property="name" label="项目名称" width="200" show-overflow-tooltip/>
+                <el-table-column property="status" label="状态" width="80">
+                    <template #default="project">
+                        <el-tag type="primary" v-if="project.row.status == '进行中'">{{ project.row.status }}</el-tag>
+                        <el-tag type="success" v-if="project.row.status == '已结束'">{{ project.row.status }}</el-tag>
+                        <el-tag type="info" v-if="project.row.status == '未开始'">{{ project.row.status }}</el-tag>
+                        <el-tag type="warning" v-if="project.row.status == '暂停'">{{ project.row.status }}</el-tag>
+                        <el-tag type="danger" v-if="project.row.status == '失败'">{{ project.row.status }}</el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column property="priority" label="优先级" width="80">
+                    <template #default="project">
+                        <el-tag type="danger" v-if="project.row.priority == 'P0'">{{ project.row.priority }}</el-tag>
+                        <el-tag type="warning" v-if="project.row.priority == 'P1'">{{ project.row.priority }}</el-tag>
+                        <el-tag type="info" v-if="project.row.priority == 'P2'">{{ project.row.priority }}</el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column property="description" label="项目描述" show-overflow-tooltip min-width="300"/>
+                <el-table-column label="操作">
+                    <template #default="project">
+                        <div style="font-size: 16px;">
+                            <el-button link @click="onProjectEdit(project.row.projectId)"><el-icon><EditPen /></el-icon></el-button>
+                            <el-button link @click="onProjectDelete(project.row)"><el-icon><Delete /></el-icon></el-button>
+                        </div>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </div>
+        <div class="createModal">
+            <el-dialog v-model="modalVisible" title="新建项目" width="500">
+                <el-form :model="form" label-position="right" label-width="auto" class="create-form">
+                    <el-form-item label="项目名称" required>
+                        <el-input v-model="form.name" autocomplete="off" placeholder="请输入项目名称" />
+                    </el-form-item>
+                    <el-form-item label="项目描述">
+                        <el-input v-model="form.description" type="textarea" placeholder="请输入项目描述" 
+                        :autosize="{ minRows: 3, maxRows: 10 }"></el-input>
+                    </el-form-item>
+                    <el-form-item label="优先级">
+                        <el-select v-model="form.priority" placeholder="请选择优先级">
+                            <el-option v-for="prior in priorities" :key="prior" :label="prior" :value="prior"></el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="开始日期">
+                        <el-date-picker v-model="form.startDate" type="date" placeholder="请选择开始日期"
+                        value-format="YYYY-MM-DD" format="YYYY-MM-DD"></el-date-picker>
+                    </el-form-item>
+                    <el-form-item label="结束日期">
+                        <el-date-picker v-model="form.endDate" type="date" placeholder="请选择结束日期"
+                        value-format="YYYY-MM-DD" format="YYYY-MM-DD"></el-date-picker>
+                    </el-form-item>
+
+                </el-form>
+                <div class="create-form-button">
+                    <el-button @click="modalVisible=false">取消</el-button>
+                    <el-button type="primary" @click="onProjectCreate(form)">创建</el-button>
+                </div>
+            </el-dialog>
+        </div>
     </div>
+    
 </template>
 
 <script setup lang="ts">
@@ -70,7 +81,9 @@ import { useProjectStore } from '../../store/Project'
 import {
   Delete,
   Edit,
-  Plus
+  Plus,
+  Setting,
+  EditPen
 } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -127,7 +140,7 @@ const onProjectCreate = async (data:any) => {
 }
 
 const onProjectEdit = (projectId: any) => {
-
+    router.push({name: 'projectDetail',params: {id: projectId}})
 }
 
 const onProjectDelete = (project: any) => {
@@ -162,48 +175,21 @@ const onProjectDelete = (project: any) => {
 </script>
 
 <style scoped>
+.project-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.project-header {
+    display: flex;
+    flex-direction: row;
+    margin: 15px 0px 25px 0px;
+    justify-content: space-between;
+}
 .add-project-button {
     display: flex;
     margin: 0 15px;
     justify-content: flex-end;
-}
-.card-container {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-}
-.card-item {
-    height: 250px;
-    margin-top: 10px;
-}
-.card-header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    height: 45px;
-
-}
-.card-header-left {
-    display: flex;
-    flex-direction: column;
-}
-.card-header-right {
-    display: flex;
-    flex-direction: row;
-    gap: 3px;
-}
-.card-title {
-    white-space: nowrap; /* 防止文字换行 */
-    overflow: hidden;    /* 隐藏超出部分 */
-    text-overflow: ellipsis; /* 显示省略号 */
-    max-width: 160px;
-}
-.card-content {
-    display: -webkit-box;
-    -webkit-line-clamp: 5;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 .create-form {
     margin: 12px;
@@ -213,5 +199,15 @@ const onProjectDelete = (project: any) => {
     display: flex;
     align-items: center;
     gap: 5px;
+}
+
+:deep(.el-table) {
+  box-shadow: 0 0px 8px 0 rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+}
+.project-header-title {
+    display: flex;
+    flex-direction: column;
+    
 }
 </style>
