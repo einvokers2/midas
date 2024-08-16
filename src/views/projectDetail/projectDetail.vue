@@ -71,7 +71,11 @@
                         </div>
                     </template>
                 </el-tab-pane>
-                <el-tab-pane label="任务列表"></el-tab-pane>
+                <el-tab-pane label="任务列表">
+                    <template #default>
+
+                    </template>
+                </el-tab-pane>
                 <el-tab-pane label="项目进度"></el-tab-pane>
             </el-tabs>
         </div>
@@ -83,6 +87,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ref, watch, onBeforeMount } from 'vue'
 import { useProjectStore } from '../../store/Project'
 import { Project } from '@/models/project'
+import { useTaskStore } from '../../store/Task'
 import {
   Edit, Check
 } from '@element-plus/icons-vue'
@@ -93,6 +98,7 @@ defineProps({id: String})
 const route = useRoute()
 
 const projectStore = useProjectStore()
+const taskStore = useTaskStore()
 const statuses = ['未开始', '进行中', '已结束', '暂停', '失败']
 const priorities = ['P0', 'P1', 'P2']
 
