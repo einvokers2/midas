@@ -16,6 +16,16 @@ const routes = [
         component: () => import('../views/projectDetail/projectDetail.vue'),
         name: 'projectDetail',
         prop: true
+    },
+    {
+        path: '/accountManagement',
+        component: () => import('../views/accountManagement/accountManagement.vue'),
+        name: 'accountManagement'
+    },
+    {
+        path: '/accountsList',
+        component: () => import('../views/accountManagement/accountsList.vue'),
+        name: 'accountsList'
     }
 ]
 

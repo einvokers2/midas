@@ -26,10 +26,10 @@
           <span>日程管理</span>
         </template>
       </el-menu-item>
-      <el-menu-item index="1-4">
+      <el-menu-item index="1-4" @click="navigateTo('/accountManagement')">
         <template #title>
           <el-icon><Avatar /></el-icon>
-          <span>账户管理</span>
+          <span>账号管理</span>
         </template>
       </el-menu-item>
     </el-sub-menu>

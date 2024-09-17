@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import os from 'node:os'
 import db from './database'
+import { hashPassword, verifyPassword, encryptPassword, decryptPassword } from './accounts'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -131,26 +132,261 @@ ipcMain.handle('get-table', async (_, sql) => {
         if (err) {
           reject(err); // 当有错误时，reject 错误对象
         } else {
-          resolve(rows); // 成功时，resolve 结果
+          resolve({
+            success: true,
+            data: rows
+          }); // 成功时，resolve 结果
         }
       });
     });
     return result;
   } catch (error) {
     console.error(error.message);
-    throw error; // 或者你可以返回一个错误响应给前端
+    return { 
+      success: false,   // 返回 success: false
+      error: error.message 
+    }; // 返回给调用方的错误信息
   }
 })
 
 ipcMain.handle('run-table', async (_, sql, params) => {
-  return new Promise((resolve, reject) => {
-    db.run(sql, params, (err: { message: any }, rows: unknown) => {
-      if (err) {
-        console.error(err.message);
-        reject(err);
-      }
-      resolve(rows);
-      // insert 返回lastid，update和delete返回影响行数
+  try {
+    const response = await new Promise((resolve, reject) => {
+      db.run(sql, params, function (err) {
+        if (err) {
+          return reject(err.message); // 返回错误信息
+        }
+
+        // 根据SQL操作类型返回不同的信息，并且添加 success: true
+        resolve({
+          success: true,
+          lastID: this.lastID,  // 对于INSERT操作
+          changes: this.changes // 对于UPDATE/DELETE操作
+        });
+      });
     });
-  });
+
+    return response; // 返回成功结果，包括 success: true
+  } catch (error) {
+    console.error("Error running SQL:", error);
+    return { 
+      success: false,   // 返回 success: false
+      error: error.message 
+    }; // 返回给调用方的错误信息
+  }
+});
+
+
+
+ipcMain.handle('set-master-pwd', async (event, pwd) => {
+  try {
+    // 使用 bcrypt 对密码进行加密
+    const finalEncryptedPassword = await hashPassword(pwd)
+
+    // 将加密后的密码插入到数据库中，并返回一个 Promise 以处理异步逻辑
+    const insertPassword = new Promise((resolve, reject) => {
+      db.run(
+        `INSERT INTO masterPasswords (hashedPassword) VALUES (?)`,
+        [finalEncryptedPassword],
+        function (err) {
+          if (err) {
+            reject(err); // 插入失败，返回错误
+          } else {
+            resolve(this.lastID); // 插入成功，返回最后插入行的 ID
+          }
+        }
+      );
+    });
+
+    // 等待插入操作完成
+    const lastId = await insertPassword;
+
+    // 处理成功后可以返回一些反馈
+    return { success: true, lastId };
+  } catch (error) {
+    console.error('密码设置过程中发生错误:', error);
+    return { success: false, error: error.message }; // 返回错误信息
+  }
+});
+
+ipcMain.handle('check-master-pwd', async (_, pwd) => {
+  try {
+    const getPassword = new Promise((resolve, reject) => {
+      db.get(`SELECT hashedPassword FROM masterPasswords ORDER BY id DESC LIMIT 1`, [], (err, row:any) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(row ? row.hashedPassword : null);
+        }
+      });
+    });
+
+    const storedHashedPassword = await getPassword;
+
+    if (!storedHashedPassword) {
+      return { success: false, error: '主密码未设置' };
+    }
+
+    // 使用 verifyPassword 函数来验证输入的密码
+    const isMatch = await verifyPassword(pwd, storedHashedPassword);
+
+    if (isMatch) {
+      return { success: true }; // 密码匹配
+    } else {
+      return { success: false, error: '密码错误' }; // 密码不匹配
+    }
+  } catch (error) {
+    console.error('校验密码时发生错误:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('update-master-pwd', async (_, pwd) => {
+  try {
+    // 使用 bcrypt 对密码进行加密
+    const finalEncryptedPassword = await hashPassword(pwd)
+
+    // 将加密后的密码插入到数据库中，并返回一个 Promise 以处理异步逻辑
+    const updatePassword = new Promise((resolve, reject) => {
+      db.run(
+        `UPDATE masterPasswords SET hashedPassword = '${finalEncryptedPassword}' WHERE ID = 1`,
+        [],
+        function (err) {
+          if (err) {
+            reject(err); // 插入失败，返回错误
+          } else {
+            resolve(this.lastID); // 插入成功，返回最后插入行的 ID
+          }
+        }
+      );
+    });
+
+    // 等待插入操作完成
+    const lastId = await updatePassword;
+
+    // 处理成功后可以返回一些反馈
+    return { success: true, lastId };
+  } catch (error) {
+    console.error('密码更新过程中发生错误:', error);
+    return { success: false, error: error.message }; // 返回错误信息
+  }
+});
+
+ipcMain.handle('get-acc', async (event, secretKey) => {
+  try {
+    // 使用 promise 化的 db.all 方法，或者手动将回调转换为 promise
+    const result = await new Promise((resolve, reject) => {
+      db.all(`SELECT * FROM Passwords`, [], (err, rows) => {
+        if (err) {
+          reject(err); // 当有错误时，reject 错误对象
+        } else {
+          if (rows) {
+            (rows as Array<any>).forEach(row => {
+              row.password = decryptPassword(row.password, secretKey)
+            })
+          }
+          resolve({
+            success: true,
+            data: rows
+          }); // 成功时，resolve 结果
+        }
+      });
+    });
+    return result;
+  } catch (error) {
+    console.error(error.message);
+    return { 
+      success: false,   // 返回 success: false
+      error: error.message 
+    }; // 返回给调用方的错误信息
+  }
+})
+
+ipcMain.handle('set-acc', async (event, acc, secretKey) => {
+  try {
+    // 使用 bcrypt 对密码进行加密
+    const finalEncryptedPassword = encryptPassword(acc.password, secretKey)
+
+    // 将加密后的密码插入到数据库中，并返回一个 Promise 以处理异步逻辑
+    const insertPassword = new Promise((resolve, reject) => {
+      db.run(
+        `INSERT INTO Passwords (app, username, password) VALUES (?,?,?)`,
+        [acc.app, acc.username, finalEncryptedPassword],
+        function (err) {
+          if (err) {
+            reject(err); // 插入失败，返回错误
+          } else {
+            resolve(this.lastID); // 插入成功，返回最后插入行的 ID
+          }
+        }
+      );
+    });
+
+    // 等待插入操作完成
+    const lastId = await insertPassword;
+
+    // 处理成功后可以返回一些反馈
+    return { success: true, lastId };
+  } catch (error) {
+    console.error('账号设置过程中发生错误:', error);
+    return { success: false, error: error.message }; // 返回错误信息
+  }
+});
+
+ipcMain.handle('update-acc', async (_, acc, secretKey) => {
+  try {
+    // 使用 bcrypt 对密码进行加密
+    const finalEncryptedPassword = await encryptPassword(acc.password, secretKey)
+
+    // 将加密后的密码插入到数据库中，并返回一个 Promise 以处理异步逻辑
+    const updatePassword = new Promise((resolve, reject) => {
+      db.run(
+        `UPDATE Passwords SET username = '${acc.username}', password = '${finalEncryptedPassword}' WHERE app = '${acc.app}'`,
+        [],
+        function (err) {
+          if (err) {
+            reject(err); // 插入失败，返回错误
+          } else {
+            resolve(this.lastID); // 插入成功，返回最后插入行的 ID
+          }
+        }
+      );
+    });
+
+    // 等待插入操作完成
+    const lastId = await updatePassword;
+
+    // 处理成功后可以返回一些反馈
+    return { success: true, lastId };
+  } catch (error) {
+    console.error('账号更新过程中发生错误:', error);
+    return { success: false, error: error.message }; // 返回错误信息
+  }
+});
+
+ipcMain.handle('delete-acc', async (_, app) => {
+  try {
+    const deleteAccount = new Promise((resolve, reject) => {
+      db.run(
+        `DELETE FROM Passwords WHERE app = '${app}'`,
+        [],
+        function (err) {
+          if (err) {
+            reject(err); // 插入失败，返回错误
+          } else {
+            resolve(this.changes); // 插入成功，返回最后插入行的 ID
+          }
+        }
+      );
+    });
+
+    // 等待插入操作完成
+    const changes = await deleteAccount;
+
+    // 处理成功后可以返回一些反馈
+    return { success: true, changes };
+  } catch (error) {
+    console.error('账号删除过程中发生错误:', error);
+    return { success: false, error: error.message }; // 返回错误信息
+  }
 })

@@ -9,19 +9,33 @@ export const useProjectStore = defineStore('project', () => {
     const loadProject = async () => {
         await window.ipcRenderer.invoke('get-table', `SELECT * FROM Projects`).then(
             (result) => {
-                project.value = result as Project[]
+                if (result.success) {
+                    project.value = result.data as Project[]
+                } else {
+                    console.log(result.error)
+                    ElMessage.error({
+                        message: '获取项目列表失败',
+                        duration: 2500,
+                    })
+                }
+                
             }
-        ).catch(
-            (error) => {ElMessage(`获取项目列表失败:${error}`)}
         )
     }
     const getProjectById = async (id: number) => {
         await window.ipcRenderer.invoke('get-table', `SELECT * FROM Projects WHERE projectId = ${id}`).then(
             (result) => {
-                currentProject.value = result[0] as Project
+                if (result.success) {
+                    currentProject.value = result.data[0] as Project
+                } else {
+                    console.log(result.error)
+                    ElMessage.error({
+                        message: '获取项目失败',
+                        duration: 2500,
+                    })
+                }
+                
             }
-        ).catch(
-            (error) => {ElMessage(`获取项目失败:${error}`)}
         )
     }
     const updateProjectById = async (id: number | string, project: Project) => {
@@ -33,8 +47,16 @@ export const useProjectStore = defineStore('project', () => {
             priority = '${project.priority}', 
             startDate = '${project.startDate}',
             endDate = '${project.endDate}'
-        WHERE projectId = ${id};`).catch(
-            (error) => {ElMessage(`更新项目失败:${error}`)}
+        WHERE projectId = ${id};`).then(
+            (result) => {
+                if (!result.success) {
+                    console.log(result.error)
+                    ElMessage.error({
+                        message: '更新项目失败',
+                        duration: 2500,
+                    })
+                }
+            }
         )
     }
     return {project, currentProject, loadProject, getProjectById, updateProjectById}
