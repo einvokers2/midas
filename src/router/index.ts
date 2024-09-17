@@ -13,7 +13,7 @@ const routes = [
     },
     {
         path: '/projectDetail/:id',
-        component: () => import('../views/projectDetail/projectDetail.vue'),
+        component: () => import('../views/projectManagement/projectDetail.vue'),
         name: 'projectDetail',
         prop: true
     },
