@@ -90,7 +90,7 @@ const createForm = reactive<Form>({
 var secretKey: string
 async function loadAccount(secretKey: string) {
     await window.ipcRenderer.invoke('get-acc', secretKey).then(
-        async (result) => {
+        async (result: any) => {
             if (result.success) {
                 accountsData.value = result.data as Accounts[]
                 filteredData.value = accountsData.value

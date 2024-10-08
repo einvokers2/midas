@@ -88,7 +88,7 @@ const modifyForm = reactive<modifyFormInstance>({oldPwd: '', newPwd: '', newPwd2
 onBeforeMount(
     async () => {
         await window.ipcRenderer.invoke('get-table', `SELECT count(*) FROM masterPasswords`).then(
-            (result) => {
+            (result: any) => {
                 if (result.success) {
                     if (result.data[0]["count(*)"] === 0) {
                         masterPasswordsExist.value = false

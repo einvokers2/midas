@@ -24,7 +24,7 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@vitejs/plugin-vue": "^5.0.4",
-    "electron": "latest",
+    "electron": "^32.1.2",
     "electron-builder": "^24.13.3",
     "prebuild-install": "^7.1.2",
     "sqlite3": "^5.1.7",

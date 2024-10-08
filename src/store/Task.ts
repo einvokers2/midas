@@ -7,7 +7,7 @@ export const useTaskStore = defineStore('task', () => {
     const tasks = ref<Task[]>([] as Task[])
     const loadTasksByProjectId = async (id:any) => {
         await window.ipcRenderer.invoke('get-table', `SELECT * FROM Tasks WHERE projectId = ${id}`).then(
-            (result) => {
+            (result: any) => {
                 if (result.success) {
                     tasks.value = result.data as Task[]
                 } else {
@@ -20,7 +20,7 @@ export const useTaskStore = defineStore('task', () => {
                 
             }
         ).catch(
-            (error) => {ElMessage(`获取任务列表失败:${error}`)}
+            (error: any) => {ElMessage(`获取任务列表失败:${error}`)}
         )
     }
     const deleteTaskByTaskId = async (id:any) => {
@@ -39,7 +39,7 @@ export const useTaskStore = defineStore('task', () => {
             startDate = ${task.startDate},
             endDate = ${task.endDate}
         WHERE taskId = ${id};`).then(
-            (result) => {
+            (result: any) => {
                 if (!result.success) {
                     console.log(result.error)
                     ElMessage.error({
@@ -49,7 +49,7 @@ export const useTaskStore = defineStore('task', () => {
                 }
             }
         ).catch(
-            (error) => {ElMessage(`更新任务失败:${error}`)}
+            (error: any) => {ElMessage(`更新任务失败:${error}`)}
         )
     }
     return {tasks, loadTasksByProjectId, deleteTaskByTaskId, updateTaskByTaskId}

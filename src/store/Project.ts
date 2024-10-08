@@ -8,7 +8,7 @@ export const useProjectStore = defineStore('project', () => {
     const currentProject = ref<Project>({} as Project)
     const loadProject = async () => {
         await window.ipcRenderer.invoke('get-table', `SELECT * FROM Projects`).then(
-            (result) => {
+            (result: any) => {
                 if (result.success) {
                     project.value = result.data as Project[]
                 } else {
@@ -24,7 +24,7 @@ export const useProjectStore = defineStore('project', () => {
     }
     const getProjectById = async (id: number) => {
         await window.ipcRenderer.invoke('get-table', `SELECT * FROM Projects WHERE projectId = ${id}`).then(
-            (result) => {
+            (result: any) => {
                 if (result.success) {
                     currentProject.value = result.data[0] as Project
                 } else {
@@ -48,7 +48,7 @@ export const useProjectStore = defineStore('project', () => {
             startDate = '${project.startDate}',
             endDate = '${project.endDate}'
         WHERE projectId = ${id};`).then(
-            (result) => {
+            (result: any) => {
                 if (!result.success) {
                     console.log(result.error)
                     ElMessage.error({
