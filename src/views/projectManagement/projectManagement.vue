@@ -13,8 +13,10 @@
 
         <!-- 表格区域 -->
         <div class="table-container">
-            <el-table :data="projectStore.project" style="width: 100%" :default-sort="{ prop: 'createdAt', order: 'descending' }">
-                <el-table-column property="name" label="项目名称" width="160" show-overflow-tooltip/>
+            <el-table :data="projectStore.project" style="width: 100%" 
+            :default-sort="{ prop: 'startDate', order: 'descending' }" 
+            :max-height="projectTableHeight" :row-style="{height: '50px'}">
+                <el-table-column property="name" label="项目名称" width="200" show-overflow-tooltip/>
                 <el-table-column property="status" label="状态" width="100">
                     <template #default="project">
                         <el-tag type="primary" v-if="project.row.status == '进行中'">{{ project.row.status }}</el-tag>
@@ -31,16 +33,16 @@
                         <el-tag type="info" v-if="project.row.priority == 'P2'">{{ project.row.priority }}</el-tag>
                     </template>
                 </el-table-column>
-                <el-table-column property="createdAt" label="创建时间" width="180" sortable>
+                <el-table-column property="startDate" label="开始时间" width="180" sortable>
                     <template #default="project">
-                        <span>{{ formatToLocalDateTime(project.row.createdAt) }}</span>
+                        <span>{{ formatTimestampToDateString(project.row.startDate, false) }}</span>
                     </template>
                 </el-table-column>
-                <el-table-column property="description" label="项目描述" show-overflow-tooltip/>
+                <el-table-column property="description" label="项目描述"/>
                 <el-table-column label="操作" fixed="right" width="100">
                     <template #default="project">
                         <div style="font-size: 16px;">
-                            <el-button link @click="onProjectEdit(project.row.projectId)"><el-icon><EditPen /></el-icon></el-button>
+                            <el-button link @click="onProjectEdit(project.row.projectId as string)"><el-icon><EditPen /></el-icon></el-button>
                             <el-button link @click="onProjectDelete(project.row)"><el-icon><Delete /></el-icon></el-button>
                         </div>
                     </template>
@@ -66,11 +68,11 @@
                     </el-form-item>
                     <el-form-item label="开始日期">
                         <el-date-picker v-model="form.startDate" type="date" placeholder="请选择开始日期"
-                        value-format="YYYY-MM-DD" format="YYYY-MM-DD"></el-date-picker>
+                        value-format="x" format="YYYY-MM-DD"></el-date-picker>
                     </el-form-item>
                     <el-form-item label="结束日期">
                         <el-date-picker v-model="form.endDate" type="date" placeholder="请选择结束日期"
-                        value-format="YYYY-MM-DD" format="YYYY-MM-DD"></el-date-picker>
+                        value-format="x" format="YYYY-MM-DD"></el-date-picker>
                     </el-form-item>
 
                 </el-form>
@@ -85,7 +87,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, reactive } from 'vue'
+import { ref, onBeforeMount, reactive, onMounted, onBeforeUnmount } from 'vue'
 import { useProjectStore } from '../../store/Project'
 import {
   Delete,
@@ -97,7 +99,7 @@ import {
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Project } from '@/models/project'
-import { formatToLocalDateTime } from '@/utils/functions'
+import { formatTimestampToDateString } from '@/utils/functions'
 
 const projectStore = useProjectStore()
 const router = useRouter()
@@ -105,6 +107,21 @@ const router = useRouter()
 
 const modalVisible = ref(false)
 const priorities = ['P0', 'P1', 'P2']
+
+const projectTableHeight = ref(0)
+const updateTableHeight = () => {
+    projectTableHeight.value = window.innerHeight - 140
+};
+
+onMounted(() => {
+    updateTableHeight();
+    window.addEventListener('resize', updateTableHeight); // 监听窗口尺寸变化
+});
+
+// 组件销毁前移除事件监听器
+onBeforeUnmount(() => {
+    window.removeEventListener('resize', updateTableHeight);
+});
 
 // 使用 onBeforeMount 确保先加载数据
 onBeforeMount(
@@ -154,9 +171,10 @@ const onProjectCreate = async (data:any) => {
     }
 
     try {
+        const currentTimeStamp = Date.now()
         const response = await window.ipcRenderer.invoke('run-table', `
-            INSERT INTO Projects (name, description, status, priority, startDate, endDate) VALUES
-            ('${data.name}', '${data.description}', '未开始', '${data.priority}', '${data.startDate}', '${data.endDate}');
+            INSERT INTO Projects (name, description, status, priority, startDate, endDate, createdAt) VALUES
+            ('${data.name}', '${data.description}', '未开始', '${data.priority}', '${data.startDate}', '${data.endDate}', '${currentTimeStamp}');
         `)
 
         if (response.success) {
@@ -229,8 +247,6 @@ const onProjectDelete = (project: any) => {
             message: '请求时发生错误',
         })
     })
-
-
 }
 
 </script>

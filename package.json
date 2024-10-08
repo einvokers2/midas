@@ -1,8 +1,8 @@
 {
-  "name": "ghostwalk",
+  "name": "midas",
   "version": "1.0.0",
   "main": "dist-electron/main/index.js",
-  "description": "manage your thing like Karl pressing qqwerv that easy",
+  "description": "Hands of the Team",
   "author": "Skadi <462924118@qq.com>",
   "license": "MIT",
   "private": true,
@@ -24,8 +24,10 @@
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@vitejs/plugin-vue": "^5.0.4",
-    "electron": "^31.1.0",
+    "electron": "latest",
     "electron-builder": "^24.13.3",
+    "prebuild-install": "^7.1.2",
+    "sqlite3": "^5.1.7",
     "typescript": "^5.4.2",
     "vite": "^5.1.5",
     "vite-plugin-electron": "^0.28.4",
@@ -39,7 +41,6 @@
     "crypto-js": "^4.2.0",
     "element-plus": "^2.7.6",
     "pinia": "^2.2.0",
-    "sqlite3": "^5.1.7",
     "vue": "^3.4.31",
     "vue-router": "^4.4.2"
   }

@@ -1,23 +1,22 @@
-export function formatToLocalDateTime(utcString: string) {
-    // 将 UTC 时间字符串转换为 Date 对象
-    const utcDate = new Date(utcString + ' UTC');
-    
-    // 使用 toLocaleString 来处理时区，并提取中国时区时间
-    const localDateString = utcDate.toLocaleString('zh-CN', {
-    timeZone: 'Asia/Shanghai',  // 指定为中国时区 (UTC+8)
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false  // 使用24小时制
-    });
+export function formatTimestampToDateString(timestamp: number, datetime:boolean): string {
+    if (!timestamp) {
+        return ''
+    }
+    const dateObj = new Date(timestamp);
 
-    // 格式调整为 YYYY-MM-DD HH:mm:ss
-    const [date, time] = localDateString.split(' ');
-    return `${date.replace(/\//g, '-')} ${time}`;
-  }
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // 月份从 0 开始，所以加 1
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const hours = String(dateObj.getHours()).padStart(2, '0');
+    const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+    const seconds = String(dateObj.getSeconds()).padStart(2, '0');
+    if (datetime) {
+        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    } else {
+        return `${year}-${month}-${day}`
+    }
+    
+}
 
 export function generateRandomPassword(length: number): string {
     const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=';

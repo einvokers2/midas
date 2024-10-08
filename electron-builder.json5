@@ -1,9 +1,10 @@
 // @see https://www.electron.build/configuration/configuration
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "YourAppID",
+  "appId": "4728",
   "asar": true,
-  "productName": "YourAppName",
+  "productName": "Midas",
+  "icon": "dist/logo.jpg",
   "directories": {
     "output": "release/${version}"
   },

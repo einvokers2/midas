@@ -8,35 +8,39 @@
             </el-input>
             <el-button @click="createAccModalVisible = true">新增账号</el-button>
         </div>
-        <el-collapse accordion class="collapse">
-            <el-collapse-item v-for="account in filteredData" >
-                <template #title>
-                    <div class="collapse-title">{{ account.app }}</div>
-                </template>
-                <template #default>
-                    <div class="collapse-expand">
-                        <div style="flex: 1; display: flex; flex-direction: row; gap: 15px;">
-                            <el-input class="inputs" v-model="account.username" @blur="onAccountChange(account)" clearable>
-                                <template #prepend><el-icon style="font-size: 18px;"><User /></el-icon></template>
-                            </el-input>
-                            <el-input class="inputs" v-model="account.password" type="password" show-password
-                            @blur="onAccountChange(account)" clearable>
-                                <template #prepend><el-icon style="font-size: 18px;"><Lock /></el-icon></template>
-                            </el-input>
+        <el-scrollbar style="padding-top: 15px;">
+            <el-collapse accordion class="collapse">
+                <el-collapse-item v-for="account in filteredData" >
+                    <template #title>
+                        <div class="collapse-title">{{ account.app }}</div>
+                    </template>
+                    <template #default>
+                        <div class="collapse-expand">
+                            <div style="flex: 1; display: flex; flex-direction: row; gap: 15px;">
+                                <el-input class="inputs" v-model="account.username" @blur="onAccountChange(account)" clearable>
+                                    <template #prepend><el-icon style="font-size: 18px;"><User /></el-icon></template>
+                                </el-input>
+                                <el-input class="inputs" v-model="account.password" type="password" show-password
+                                @blur="onAccountChange(account)" clearable>
+                                    <template #prepend><el-icon style="font-size: 18px;"><Lock /></el-icon></template>
+                                </el-input>
+                            </div>
+                            
+                            <div style="display: flex; flex-direction: row">
+                                <el-button @click="account.password = generateRandomPassword(randomPasswordLength);onAccountChange(account)">随机密码</el-button>
+                                <el-popconfirm title="确定要删除该账号吗？" @confirm="deleteAccount(account.app)" confirm-button-text="确认" cancel-button-text="取消" width="200">
+                                    <template #reference>
+                                        <el-button style="font-size: 16px;" round><el-icon><Delete /></el-icon></el-button>
+                                    </template>
+                                </el-popconfirm>
+                            </div>
                         </div>
-                        
-                        <div style="display: flex; flex-direction: row">
-                            <el-button @click="account.password = generateRandomPassword(randomPasswordLength);onAccountChange(account)">随机密码</el-button>
-                            <el-popconfirm title="确定要删除该账号吗？" @confirm="deleteAccount(account.app)" confirm-button-text="确认" cancel-button-text="取消" width="200">
-                                <template #reference>
-                                    <el-button style="font-size: 16px;" round><el-icon><Delete /></el-icon></el-button>
-                                </template>
-                            </el-popconfirm>
-                        </div>
-                    </div>
-                </template>
-            </el-collapse-item>
-        </el-collapse>
+                    </template>
+                </el-collapse-item>
+            </el-collapse>
+        </el-scrollbar>
+
+        
     </div>
 
     <el-dialog v-model="createAccModalVisible" title="新增账号" width="500" :before-close="cancelCreate" align-center>
@@ -52,7 +56,6 @@
                     <el-input v-model="createForm.password" autocomplete="off" style="flex: 1;" clearable/>
                     <el-button @click="createForm.password = generateRandomPassword(randomPasswordLength)">随机密码</el-button>
                 </div>
-
             </el-form-item>
         </el-form>
         <div style="justify-content: center;width: 100%;display: flex;flex-direction: row;">
@@ -218,7 +221,6 @@ watch(filter, () => {
     flex: 1;
 }
 .collapse {
-    margin-top: 30px;
     flex: 1;
     box-sizing: border-box;
 }

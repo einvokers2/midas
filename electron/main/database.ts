@@ -1,12 +1,14 @@
 import sqlite3 from 'sqlite3';
 import path from 'node:path';
 import { app } from 'electron';
+import * as fs from 'fs';
 sqlite3.verbose()
 
-let dbPath = path.join(app.getAppPath(), '/database.db');
+let dbPath = path.join(app.getAppPath(), 'database.db');
 if (app.isPackaged) {
-    dbPath = path.join(app.getPath('exe'), '/database.db');
+    dbPath = path.join(app.getPath('exe'), 'database.db');
 }
+
 
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
@@ -21,6 +23,11 @@ const db = new sqlite3.Database(dbPath, (err) => {
 //   DROP TABLE IF EXISTS Projects; 
 //   `
 // )
+// db.run(
+//     `
+//     DROP TABLE IF EXISTS Tasks; 
+//     `
+//   )
 
 db.run(`
 CREATE TABLE IF NOT EXISTS Projects (
@@ -29,9 +36,9 @@ CREATE TABLE IF NOT EXISTS Projects (
     description TEXT,             -- 项目描述
     status TEXT CHECK(status IN ('未开始', '进行中', '已结束', '暂停', '失败')), -- 项目状态, 限定可选值
     priority TEXT CHECK(priority IN ('P0', 'P1', 'P2')),   -- 项目优先级, 限定可选值
-    startDate TEXT,               -- 项目开始时间, 这里使用TEXT存储日期字符串, 实际生产中可能需要更精确的日期时间处理
-    endDate TEXT,                  -- 项目结束时间, 同上
-    createdAt TEXT DEFAULT CURRENT_TIMESTAMP -- 创建时间, 默认为当前时间
+    startDate INTEGER,               -- 项目开始时间, 这里使用TEXT存储日期字符串, 实际生产中可能需要更精确的日期时间处理
+    endDate INTEGER,                  -- 项目结束时间, 同上
+    createdAt INTEGER -- 创建时间, 默认为当前时间
 )
 `, (err) => {
     if (err) {
@@ -54,10 +61,11 @@ CREATE TABLE IF NOT EXISTS Tasks (
     name TEXT NOT NULL,              -- 任务名称, 不能为空
     description TEXT,                -- 任务描述
     projectId INTEGER,               -- 所属项目ID, 外键约束需手动添加或在应用层处理
-    status TEXT CHECK(status IN ('进行中', '已结束', 'Holding', '失败')), -- 任务状态, 限定可选值
+    status TEXT CHECK(status IN ('未开始', '进行中', '已结束', '暂停', '失败')), -- 项目状态, 限定可选值
     priority TEXT CHECK(priority IN ('P0', 'P1', 'P2')),   -- 任务优先级, 限定可选值
-    createdAt TEXT DEFAULT CURRENT_TIMESTAMP, -- 创建时间, 默认为当前时间
-    endAt TEXT                   -- 结束时间, 结束时生成（选错状态则清空）
+    startDate INTEGER,               -- 任务开始时间, 这里使用TIMESTAMP存储日期字符串
+    endDate INTEGER,                  -- 任务结束时间, 同上
+    createdAt INTEGER               -- 创建时间, 默认为当前时间
 )
 `, (err) => {
     if (err) {
